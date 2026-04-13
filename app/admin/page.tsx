@@ -139,7 +139,10 @@ export default function AdminDashboard() {
       method: 'POST',
       body: formData,
     });
-    if (!res.ok) throw new Error("Erreur d'upload");
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.details || errorData.error || "Erreur serveur HTTP " + res.status);
+    }
     const data = await res.json();
     return data.imageUrl;
   };
@@ -151,8 +154,8 @@ export default function AdminDashboard() {
         const compressedFile = await compressImage(e.target.files[0]);
         const url = await uploadFileToServer(compressedFile);
         setNewProduct({ ...newProduct, imageUrl: url });
-      } catch(err) {
-        alert("Echec de l'upload. L'image est trop volumineuse ou le serveur est indisponible.");
+      } catch(err: any) {
+        alert("Echec de l'upload: " + err.message);
       } finally {
         setIsUploading(false);
       }
@@ -166,8 +169,8 @@ export default function AdminDashboard() {
         const compressedFile = await compressImage(e.target.files[0]);
         const url = await uploadFileToServer(compressedFile);
         setEditForm({ ...editForm, imageUrl: url });
-      } catch(err) {
-        alert("Echec de l'upload. L'image est trop volumineuse ou le serveur est indisponible.");
+      } catch(err: any) {
+        alert("Echec de l'upload: " + err.message);
       } finally {
         setIsEditingUploading(false);
       }
