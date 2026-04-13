@@ -37,14 +37,20 @@ export default function AdminDashboard() {
       { id: 102, customerName: "Kouadio Jean", phone: "0505987654", total: 35000, method: "Wave", status: "COMPLETED", date: "12/04/2026" }
     ]);
 
-    const localProds = localStorage.getItem('moda-mastou-products');
-    if (localProds) {
-      setProducts(JSON.parse(localProds));
-    } else {
-      setProducts(DEFAULT_PRODUCTS);
-      localStorage.setItem('moda-mastou-products', JSON.stringify(DEFAULT_PRODUCTS));
-    }
+    fetchProducts();
   }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch('/api/products');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && !data.error) setProducts(data);
+      }
+    } catch {
+      console.error("Failed to fetch products");
+    }
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,23 +63,33 @@ export default function AdminDashboard() {
     }
   };
 
-  const saveProducts = (updatedProds: any[]) => {
-    setProducts(updatedProds);
-    localStorage.setItem('moda-mastou-products', JSON.stringify(updatedProds));
+  const handleUpdateProduct = async (id: number) => {
+    try {
+      const p = products.find(prod => prod.id === id);
+      const imageUrl = editForm.imageUrl || p?.imageUrl;
+      
+      const res = await fetch('/api/products', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...editForm, price: Number(editForm.price), quantity: Number(editForm.quantity), imageUrl })
+      });
+      if (res.ok) {
+        await fetchProducts();
+        setEditingId(null);
+      }
+    } catch (e) {
+      alert("Erreur lors de la mise à jour");
+    }
   };
 
-  const handleUpdateProduct = (id: number) => {
-    const updated = products.map(p => 
-      p.id === id ? { ...p, name: editForm.name, price: Number(editForm.price), quantity: Number(editForm.quantity), imageUrl: editForm.imageUrl || p.imageUrl } : p
-    );
-    saveProducts(updated);
-    setEditingId(null);
-  };
-
-  const handleDeleteProduct = (id: number) => {
+  const handleDeleteProduct = async (id: number) => {
     if (confirm("Êtes-vous sûre de vouloir supprimer ce produit ?")) {
-      const updated = products.filter(p => p.id !== id);
-      saveProducts(updated);
+      try {
+        const res = await fetch(`/api/products?id=${id}`, { method: 'DELETE' });
+        if (res.ok) await fetchProducts();
+      } catch (e) {
+        alert("Erreur de suppression");
+      }
     }
   };
 
@@ -117,22 +133,30 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleAddProduct = (e: React.FormEvent) => {
+  const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProduct.name || newProduct.price <= 0) return;
     
-    const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
-    const added = [...products, { 
-      id: newId, 
-      name: newProduct.name, 
-      price: Number(newProduct.price), 
-      quantity: Number(newProduct.quantity), 
-      imageUrl: newProduct.imageUrl || "https://via.placeholder.com/500x800?text=Mastou",
-      description: "Nouveau modèle de la collection."
-    }];
-    
-    saveProducts(added);
-    setNewProduct({ name: '', price: 0, quantity: 0, imageUrl: '' });
+    try {
+      const res = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newProduct.name,
+          price: Number(newProduct.price),
+          quantity: Number(newProduct.quantity),
+          imageUrl: newProduct.imageUrl
+        })
+      });
+      if (res.ok) {
+        await fetchProducts();
+        setNewProduct({ name: '', price: 0, quantity: 0, imageUrl: '' });
+      } else {
+        alert("Erreur serveur lors de la création.");
+      }
+    } catch (e) {
+      alert("Erreur d'ajout");
+    }
   };
 
   if (!isAuthenticated) {

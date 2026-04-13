@@ -64,30 +64,20 @@ export default function ShopPage() {
 
   useEffect(() => {
     async function fetchProducts() {
-      const localData = localStorage.getItem('moda-mastou-products');
-      if (localData) {
-        setProducts(JSON.parse(localData));
-        setLoading(false);
-        return;
-      }
-
       try {
         const res = await fetch('/api/products');
         if (!res.ok) throw new Error("Erreur serveur");
         const data = await res.json();
         
-        if (!data || data.length === 0 || data.error) {
-          throw new Error("DB vide");
+        if (!data || data.error) {
+          throw new Error("DB vide ou indisponible");
         } else {
           setProducts(data);
         }
       } catch (e) {
         console.error("Erreur de récupération :", e);
-        setProducts([
-          { id: 1, name: "Robe de Soirée Istanbul", description: "Élégance pure avec détails brodés.", price: 45000, imageUrl: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500&q=80" },
-          { id: 2, name: "Abaya Khadija", description: "Minimalisme et confort en soie perlée.", price: 35000, imageUrl: "https://images.unsplash.com/photo-1589156229687-496a31ad1d1f?w=500&q=80" },
-          { id: 3, name: "Tunique Ankara Gold", description: "Un mélange de style chic et urbain.", price: 25000, imageUrl: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500&q=80" }
-        ]);
+        // Au cas où la base est vide
+        setProducts([]);
       } finally {
         setLoading(false);
       }

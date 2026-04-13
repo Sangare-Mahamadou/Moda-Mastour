@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
+import { put } from '@vercel/blob';
 
 export async function POST(request: Request) {
   try {
@@ -11,24 +10,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Aucun fichier reçu." }, { status: 400 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    // Nom de fichier unique
     const filename = Date.now() + "_" + file.name.replaceAll(' ', '_');
     
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+    // Upload de l'image directement dans le nuage Vercel (Blob Storage)
+    const blob = await put(`uploads/${filename}`, file, {
+      access: 'public',
+    });
     
-    // Créer le dossier s'il n'existe pas
-    try {
-      await mkdir(uploadDir, { recursive: true });
-    } catch(e) {}
-    
-    await writeFile(path.join(uploadDir, filename), buffer);
-    
-    const imageUrl = `/uploads/${filename}`;
-    return NextResponse.json({ success: true, imageUrl });
+    return NextResponse.json({ success: true, imageUrl: blob.url });
 
-  } catch (error) {
-    console.error("Erreur d'upload :", error);
-    return NextResponse.json({ error: "Échec de l'upload." }, { status: 500 });
+  } catch (error: any) {
+    console.error("Erreur d'upload Vercel Blob :", error);
+    return NextResponse.json({ 
+      error: "Échec de l'upload.",
+      details: error?.message || 'Erreur inconnue'
+    }, { status: 500 });
   }
 }
+
