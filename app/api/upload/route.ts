@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     // Upload de l'image directement dans le nuage Vercel (Blob Storage)
     const blob = await put(`uploads/${filename}`, file, {
       access: 'public',
-      token: process.env.BLOB_READ_WRITE_TOKEN || 'vercel_blob_rw_DfZ5C9fDScx5Casf_dac2bJqA1jvVVqwS7hOq6PtNbw5dha'
+      token: process.env.BLOB_READ_WRITE_TOKEN || 'vercel_blob_rw_VXUu8wGnttaMAttN_9AEINSKXSgzIC23nCxSVAyNgrvzbeb'
     });
     
     return NextResponse.json({ success: true, imageUrl: blob.url });
