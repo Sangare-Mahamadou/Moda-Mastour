@@ -8,6 +8,45 @@ const DEFAULT_PRODUCTS = [
   { id: 3, name: "Tunique Ankara Gold", description: "Mélange chic et urbain.", price: 25000, imageUrl: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500&q=80", quantity: 20 }
 ];
 
+const compressImage = (file: File): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800; 
+        const MAX_HEIGHT = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+        } else {
+          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const compressedFile = new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() });
+            resolve(compressedFile);
+          } else {
+            reject(new Error('Erreur de compression'));
+          }
+        }, 'image/jpeg', 0.8);
+      };
+      img.onerror = (error) => reject(error);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
+
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
@@ -109,7 +148,8 @@ export default function AdminDashboard() {
     if (e.target.files && e.target.files[0]) {
       setIsUploading(true);
       try {
-        const url = await uploadFileToServer(e.target.files[0]);
+        const compressedFile = await compressImage(e.target.files[0]);
+        const url = await uploadFileToServer(compressedFile);
         setNewProduct({ ...newProduct, imageUrl: url });
       } catch(err) {
         alert("Echec de l'upload. L'image est trop volumineuse ou le serveur est indisponible.");
@@ -123,7 +163,8 @@ export default function AdminDashboard() {
     if (e.target.files && e.target.files[0]) {
       setIsEditingUploading(true);
       try {
-        const url = await uploadFileToServer(e.target.files[0]);
+        const compressedFile = await compressImage(e.target.files[0]);
+        const url = await uploadFileToServer(compressedFile);
         setEditForm({ ...editForm, imageUrl: url });
       } catch(err) {
         alert("Echec de l'upload. L'image est trop volumineuse ou le serveur est indisponible.");
