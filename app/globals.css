@@ -539,3 +539,103 @@ a {
     max-width: 100%;
   }
 }
+
+.menu-toggle {
+  display: none; /* Caché par défaut sur les grands écrans */
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  color: var(--color-black);
+}
+
+/* Styles pour les écrans de taille moyenne et petite */
+@media (max-width: 768px) {
+  .main-header {
+    padding: 0.5rem 1rem;
+  }
+
+  .menu-toggle {
+    display: block; /* Affiché sur les petits écrans */
+    z-index: 101;
+  }
+
+  .main-nav {
+    display: none; /* Menu caché par défaut sur mobile */
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 70%;
+    height: 100vh;
+    background-color: var(--color-beige);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+  }
+
+  .main-nav.is-open {
+    display: flex;
+    transform: translateX(0);
+  }
+
+  .main-nav a {
+    margin: 1.5rem 0;
+    font-size: 1.5rem;
+  }
+
+  .logo-img {
+    height: 80px;
+  }
+}
+
+/* --- Styles responsifs --- */
+
+/* Pour les tablettes et en dessous */
+@media (max-width: 992px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+/* Pour les mobiles */
+@media (max-width: 768px) {
+  .hero h1 {
+    font-size: 3rem;
+  }
+
+  .hero p {
+    font-size: 1.1rem;
+  }
+
+  .btn-primary {
+    padding: 1rem 2rem;
+    font-size: 0.9rem;
+  }
+
+  .features-section {
+    flex-direction: column;
+    padding: 3rem 1rem;
+  }
+
+  .feature {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .shop-container {
+    padding: 0 1rem;
+  }
+
+  .products-grid {
+    grid-template-columns: 1fr; /* Une seule colonne sur mobile */
+    gap: 2rem;
+  }
+
+  .page-title {
+    font-size: 2rem;
+    margin: 2rem 0;
+  }
+}

@@ -1,17 +1,20 @@
-import type { Metadata } from 'next'
-import './globals.css'
-import { CartProvider } from './context/CartContext'
+"use client";
 
-export const metadata: Metadata = {
-  title: 'Moda Mastou - Vêtements de Luxe pour Femmes',
-  description: 'Boutique en ligne élégante de vêtements féminins. Mode de Turquie en Côte d\'Ivoire.',
-}
+import { useState } from 'react';
+import type { Metadata } from 'next';
+import './globals.css';
+import { CartProvider } from './context/CartContext';
+
+// Note: Metadata is not supported in client components.
+// You might need to move this to a server component if you need metadata.
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
     <html lang="fr">
       <body>
@@ -19,7 +22,10 @@ export default function RootLayout({
           <a href="/" className="logo-link">
             <img src="/mastou3.png" alt="Moda Mastou Logo" className="logo-img" />
           </a>
-          <nav className="main-nav">
+          <button className="menu-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            &#9776;
+          </button>
+          <nav className={`main-nav ${isMenuOpen ? 'is-open' : ''}`}>
             <a href="/">Accueil</a>
             <a href="/shop">Catalogue</a>
             <a href="/cart">Panier</a>
