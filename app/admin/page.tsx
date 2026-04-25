@@ -59,12 +59,16 @@ export default function AdminDashboard() {
 
   // Produit en édition
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState({ name: '', price: 0, quantity: 0, imageUrl: '' });
+  const [editForm, setEditForm] = useState({ name: '', price: 0, originalPrice: 0, quantity: 0, imageUrl: '', sizes: [] as string[], additionalInfo: '', description: '' });
   const [isEditingUploading, setIsEditingUploading] = useState(false);
 
   // Nouveau produit
-  const [newProduct, setNewProduct] = useState({ name: '', price: 0, quantity: 0, imageUrl: '' });
+  const [newProduct, setNewProduct] = useState({ name: '', price: 0, originalPrice: 0, quantity: 0, imageUrl: '', sizes: [] as string[], additionalInfo: '', description: '' });
   const [isUploading, setIsUploading] = useState(false);
+  const [newSizeInput, setNewSizeInput] = useState('');
+  const [editSizeInput, setEditSizeInput] = useState('');
+
+  const AVAILABLE_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Unique'];
 
   useEffect(() => {
     if (sessionStorage.getItem('admin_auth') === 'true') {
@@ -110,7 +114,15 @@ export default function AdminDashboard() {
       const res = await fetch('/api/products', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, ...editForm, price: Number(editForm.price), quantity: Number(editForm.quantity), imageUrl })
+        body: JSON.stringify({ 
+          id, 
+          ...editForm, 
+          price: Number(editForm.price), 
+          originalPrice: Number(editForm.originalPrice) > 0 ? Number(editForm.originalPrice) : null,
+          quantity: Number(editForm.quantity), 
+          imageUrl, 
+          sizes: editForm.sizes 
+        })
       });
       if (res.ok) {
         await fetchProducts();
@@ -188,13 +200,17 @@ export default function AdminDashboard() {
         body: JSON.stringify({
           name: newProduct.name,
           price: Number(newProduct.price),
+          originalPrice: Number(newProduct.originalPrice) > 0 ? Number(newProduct.originalPrice) : null,
           quantity: Number(newProduct.quantity),
-          imageUrl: newProduct.imageUrl
+          imageUrl: newProduct.imageUrl,
+          sizes: newProduct.sizes,
+          description: newProduct.description,
+          additionalInfo: newProduct.additionalInfo
         })
       });
       if (res.ok) {
         await fetchProducts();
-        setNewProduct({ name: '', price: 0, quantity: 0, imageUrl: '' });
+        setNewProduct({ name: '', price: 0, originalPrice: 0, quantity: 0, imageUrl: '', sizes: [], additionalInfo: '', description: '' });
       } else {
         alert("Erreur serveur lors de la création.");
       }
@@ -250,12 +266,66 @@ export default function AdminDashboard() {
                   <input type="text" value={newProduct.name} onChange={e=>setNewProduct({...newProduct, name: e.target.value})} required/>
                 </div>
                 <div className="form-group short-input">
-                  <label>Prix (FCFA)</label>
+                  <label>Prix de Vente Actuel (FCFA)</label>
                   <input type="number" value={newProduct.price} onChange={e=>setNewProduct({...newProduct, price: Number(e.target.value)})} required/>
+                </div>
+                <div className="form-group short-input">
+                  <label>Prix Normal avant promo (Optionnel)</label>
+                  <input type="number" value={newProduct.originalPrice} onChange={e=>setNewProduct({...newProduct, originalPrice: Number(e.target.value)})} placeholder="Ex: 50000" />
                 </div>
                 <div className="form-group short-input">
                   <label>Quantité</label>
                   <input type="number" value={newProduct.quantity} onChange={e=>setNewProduct({...newProduct, quantity: Number(e.target.value)})} required/>
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Description du produit</label>
+                <textarea value={newProduct.description} onChange={e=>setNewProduct({...newProduct, description: e.target.value})} className="edit-input" placeholder="Ex: Tissu doux..."></textarea>
+              </div>
+              <div className="form-group">
+                <label>Informations supplémentaires (Entretien, Matière...)</label>
+                <textarea value={newProduct.additionalInfo} onChange={e=>setNewProduct({...newProduct, additionalInfo: e.target.value})} className="edit-input" placeholder="Ex: Lavage à froid uniquement. 100% Coton."></textarea>
+              </div>
+              <div className="form-group">
+                <label>Tailles disponibles</label>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+                  {AVAILABLE_SIZES.map(size => (
+                    <label key={size} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer', fontWeight: 'normal' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={newProduct.sizes.includes(size)} 
+                        onChange={(e) => {
+                          if (e.target.checked) setNewProduct({...newProduct, sizes: [...newProduct.sizes, size]});
+                          else setNewProduct({...newProduct, sizes: newProduct.sizes.filter(s => s !== size)});
+                        }}
+                      /> {size}
+                    </label>
+                  ))}
+                  {newProduct.sizes.filter(s => !AVAILABLE_SIZES.includes(s)).map(customSize => (
+                    <label key={customSize} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer', fontWeight: 'normal', color: 'var(--color-gold)' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={true} 
+                        onChange={() => setNewProduct({...newProduct, sizes: newProduct.sizes.filter(s => s !== customSize)})}
+                      /> {customSize}
+                    </label>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <input 
+                    type="text" 
+                    value={newSizeInput} 
+                    onChange={e => setNewSizeInput(e.target.value)} 
+                    placeholder="Autre taille (ex: 42)" 
+                    className="edit-input" 
+                    style={{ width: '150px', margin: 0 }}
+                  />
+                  <button type="button" onClick={() => {
+                    if (newSizeInput && !newProduct.sizes.includes(newSizeInput)) {
+                      setNewProduct({...newProduct, sizes: [...newProduct.sizes, newSizeInput]});
+                    }
+                    setNewSizeInput('');
+                  }} className="btn-secondary" style={{ padding: '0.5rem' }}>Ajouter</button>
                 </div>
               </div>
               <div className="form-group">
@@ -285,6 +355,40 @@ export default function AdminDashboard() {
                       <>
                         <td className="edit-cell">
                           <input type="text" value={editForm.name} onChange={e=>setEditForm({...editForm, name: e.target.value})} placeholder="Nom du vêtement" className="edit-input" />
+                          <textarea value={editForm.description} onChange={e=>setEditForm({...editForm, description: e.target.value})} placeholder="Description" className="edit-input"></textarea>
+                          <textarea value={editForm.additionalInfo} onChange={e=>setEditForm({...editForm, additionalInfo: e.target.value})} placeholder="Info Sup" className="edit-input"></textarea>
+                          <div style={{ marginBottom: '0.5rem' }}>
+                            <small>Tailles:</small><br/>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.2rem', marginBottom: '0.3rem' }}>
+                              {AVAILABLE_SIZES.map(s => (
+                                <label key={s} style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                  <input type="checkbox" checked={editForm.sizes.includes(s)} onChange={e => {
+                                      if (e.target.checked) setEditForm({...editForm, sizes: [...editForm.sizes, s]});
+                                      else setEditForm({...editForm, sizes: editForm.sizes.filter(x => x !== s)});
+                                  }}/> {s}
+                                </label>
+                              ))}
+                              {editForm.sizes.filter(s => !AVAILABLE_SIZES.includes(s)).map(s => (
+                                <label key={s} style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '2px', color: 'var(--color-gold)' }}>
+                                  <input type="checkbox" checked={true} onChange={() => setEditForm({...editForm, sizes: editForm.sizes.filter(x => x !== s)})}/> {s}
+                                </label>
+                              ))}
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
+                              <input 
+                                type="text" 
+                                value={editSizeInput} 
+                                onChange={e => setEditSizeInput(e.target.value)} 
+                                placeholder="Autre taille" 
+                                className="edit-input" 
+                                style={{ width: '100px', margin: 0, padding: '0.2rem', fontSize: '0.8rem' }}
+                              />
+                              <button type="button" onClick={() => {
+                                if (editSizeInput && !editForm.sizes.includes(editSizeInput)) setEditForm({...editForm, sizes: [...editForm.sizes, editSizeInput]});
+                                setEditSizeInput('');
+                              }} style={{ fontSize: '0.7rem', padding: '0.3rem 0.5rem', cursor: 'pointer' }}>Ajout</button>
+                            </div>
+                          </div>
                           <div>
                             <small style={{display:'block', marginBottom: '0.3rem'}}>Changer la photo :</small>
                             <input type="file" accept="image/*" onChange={handleEditProductFileSelect} disabled={isEditingUploading}/>
@@ -292,7 +396,12 @@ export default function AdminDashboard() {
                             {editForm.imageUrl && editForm.imageUrl !== p.imageUrl && <span style={{color: 'green', fontSize: '0.7rem'}}>Nouvelle image reçue</span>}
                           </div>
                         </td>
-                        <td className="edit-cell"><input type="number" value={editForm.price} onChange={e=>setEditForm({...editForm, price: Number(e.target.value)})} className="edit-input" /></td>
+                        <td className="edit-cell">
+                          <small>Prix actuel:</small>
+                          <input type="number" value={editForm.price} onChange={e=>setEditForm({...editForm, price: Number(e.target.value)})} className="edit-input" />
+                          <small>Prix barré (promo):</small>
+                          <input type="number" value={editForm.originalPrice} onChange={e=>setEditForm({...editForm, originalPrice: Number(e.target.value)})} className="edit-input" />
+                        </td>
                         <td className="edit-cell"><input type="number" value={editForm.quantity} onChange={e=>setEditForm({...editForm, quantity: Number(e.target.value)})} className="edit-input" /></td>
                         <td className="actions-cell">
                           <div className="action-buttons">
@@ -303,12 +412,20 @@ export default function AdminDashboard() {
                       </>
                     ) : (
                       <>
-                        <td style={{ fontWeight: 'bold' }}>{p.name} {p.imageUrl?.includes('/uploads') ? '📸' : ''}</td>
-                        <td style={{ color: 'var(--color-gold)' }}>{p.price.toLocaleString()}</td>
+                        <td style={{ fontWeight: 'bold' }}>
+                          {p.name} {p.imageUrl?.includes('/uploads') ? '📸' : ''}
+                          {p.sizes && p.sizes.length > 0 && <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.2rem' }}>Tailles : {p.sizes.join(', ')}</div>}
+                        </td>
+                        <td style={{ color: 'var(--color-gold)' }}>
+                          {p.price.toLocaleString()}
+                          {p.originalPrice && p.originalPrice > p.price && (
+                            <div style={{ fontSize: '0.8rem', color: '#888', textDecoration: 'line-through' }}>{p.originalPrice.toLocaleString()}</div>
+                          )}
+                        </td>
                         <td>{p.quantity}</td>
                         <td className="actions-cell">
                           <div className="action-buttons">
-                            <button onClick={() => { setEditingId(p.id); setEditForm({ name: p.name, price: p.price, quantity: p.quantity, imageUrl: '' }); }} className="btn-edit">Modifier</button>
+                            <button onClick={() => { setEditingId(p.id); setEditForm({ name: p.name, price: p.price, originalPrice: p.originalPrice || 0, quantity: p.quantity, imageUrl: '', sizes: p.sizes || [], additionalInfo: p.additionalInfo || '', description: p.description || '' }); }} className="btn-edit">Modifier</button>
                             <button onClick={() => handleDeleteProduct(p.id)} className="btn-delete">Suppr</button>
                           </div>
                         </td>

@@ -7,14 +7,17 @@ export interface CartItem {
   name: string;
   price: number;
   quantity: number;
+  quantity: number;
   imageUrl?: string | null;
+  size?: string;
+  cartItemId?: string;
 }
 
 interface CartContextType {
   cart: CartItem[];
   addToCart: (item: CartItem) => void;
-  updateQuantity: (id: number, quantity: number) => void;
-  removeFromCart: (id: number) => void;
+  updateQuantity: (cartItemId: string, quantity: number) => void;
+  removeFromCart: (cartItemId: string) => void;
   clearCart: () => void;
   total: number;
 }
@@ -46,27 +49,30 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [cart, isClient]);
 
   const addToCart = (product: CartItem) => {
+    const cId = product.cartItemId || `${product.id}-${product.size || 'default'}`;
+    const pWithCid = { ...product, cartItemId: cId };
+
     setCart((prev) => {
-      const existing = prev.find(item => item.id === product.id);
+      const existing = prev.find(item => item.cartItemId === cId);
       if (existing) {
         return prev.map(item => 
-          item.id === product.id ? { ...item, quantity: item.quantity + product.quantity } : item
+          item.cartItemId === cId ? { ...item, quantity: item.quantity + product.quantity } : item
         );
       }
-      return [...prev, product];
+      return [...prev, pWithCid];
     });
   };
 
-  const updateQuantity = (id: number, quantity: number) => {
+  const updateQuantity = (cartItemId: string, quantity: number) => {
     if (quantity <= 0) {
-      removeFromCart(id);
+      removeFromCart(cartItemId);
       return;
     }
-    setCart((prev) => prev.map(item => item.id === id ? { ...item, quantity } : item));
+    setCart((prev) => prev.map(item => item.cartItemId === cartItemId ? { ...item, quantity } : item));
   };
 
-  const removeFromCart = (id: number) => {
-    setCart((prev) => prev.filter(item => item.id !== id));
+  const removeFromCart = (cartItemId: string) => {
+    setCart((prev) => prev.filter(item => item.cartItemId !== cartItemId));
   };
 
   const clearCart = () => setCart([]);

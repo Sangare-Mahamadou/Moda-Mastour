@@ -19,17 +19,19 @@ export default function CartPage() {
     <div className="cart-container">
       <h1 className="page-title">Votre Panier</h1>
       <div className="cart-items">
-        {cart.map(item => (
-          <div key={item.id} className="cart-item" style={{ flexWrap: 'wrap', gap: '1rem' }}>
+        {cart.map((item, idx) => (
+          <div key={item.cartItemId || idx} className="cart-item" style={{ flexWrap: 'wrap', gap: '1rem' }}>
             <div className="cart-item-info" style={{ flex: 1, minWidth: '200px' }}>
-              <h3 style={{ marginBottom: '0.5rem' }}>{item.name}</h3>
+              <h3 style={{ marginBottom: '0.5rem' }}>
+                {item.name} {item.size && <span style={{fontSize: '0.9rem', color: '#666'}}>(Taille: {item.size})</span>}
+              </h3>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <label style={{ fontWeight: 'bold' }}>Quantité :</label>
                 <input 
                   type="number" 
                   min="1" 
                   value={item.quantity} 
-                  onChange={(e) => updateQuantity(item.id, Number(e.target.value))} 
+                  onChange={(e) => updateQuantity(item.cartItemId as string, Number(e.target.value))} 
                   style={{ width: '60px', padding: '0.4rem', borderRadius: '4px', border: '1px solid #ccc', textAlign: 'center' }}
                 />
               </div>
@@ -38,7 +40,7 @@ export default function CartPage() {
               <p style={{ fontWeight: 'bold', fontSize: '1.2rem', color: 'var(--color-gold)' }}>
                 {(item.price * item.quantity).toLocaleString()} FCFA
               </p>
-              <button onClick={() => removeFromCart(item.id)} className="btn-text-danger">Retirer</button>
+              <button onClick={() => removeFromCart(item.cartItemId as string)} className="btn-text-danger">Retirer</button>
             </div>
           </div>
         ))}

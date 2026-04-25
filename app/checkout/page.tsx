@@ -19,7 +19,8 @@ export default function CheckoutPage() {
     let message = `Bonjour Moda Mastou ! 👋\nJe souhaite passer une commande.\n\n*Client(e) :* ${formData.name}\n*Contact Paiement :* ${formData.phone} (${formData.method})\n\n*Détails de la commande :*\n`;
     
     cart.forEach(item => {
-      message += `- ${item.quantity}x ${item.name} (${(item.price * item.quantity).toLocaleString()} FCFA)\n`;
+      const sizeStr = item.size ? ` [Taille: ${item.size}]` : '';
+      message += `- ${item.quantity}x ${item.name}${sizeStr} (${(item.price * item.quantity).toLocaleString()} FCFA)\n`;
     });
     
     message += `\n*TOTAL À PAYER : ${total.toLocaleString()} FCFA*`;

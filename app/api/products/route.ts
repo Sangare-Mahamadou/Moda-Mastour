@@ -21,9 +21,12 @@ export async function POST(req: Request) {
       data: {
         name: body.name,
         price: body.price,
+        originalPrice: body.originalPrice || null,
         quantity: body.quantity,
         imageUrl: body.imageUrl || "https://via.placeholder.com/500x800?text=Mastou",
-        description: body.description || "Nouveau modèle."
+        description: body.description || "Nouveau modèle.",
+        additionalInfo: body.additionalInfo || null,
+        sizes: body.sizes || [],
       }
     });
     return NextResponse.json(product);
@@ -41,8 +44,12 @@ export async function PUT(req: Request) {
       data: {
         name: body.name,
         price: body.price,
+        originalPrice: body.originalPrice || null,
         quantity: body.quantity,
         imageUrl: body.imageUrl,
+        description: body.description,
+        additionalInfo: body.additionalInfo || null,
+        sizes: body.sizes || [],
       }
     });
     return NextResponse.json(product);
