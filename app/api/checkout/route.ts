@@ -8,7 +8,6 @@ export async function POST(request: Request) {
     const data = await request.json();
     
     // Insertion fictive de la commande en attendant que le serveur DB de l'utilisateur soit réactivé
-    /*
     const newOrder = await prisma.order.create({
       data: {
         customerName: data.name,
@@ -20,12 +19,12 @@ export async function POST(request: Request) {
           create: data.cart.map((item: any) => ({
             productId: item.id,
             quantity: item.quantity,
-            price: item.price
+            price: item.price,
+            size: item.size || null
           }))
         }
       }
     });
-    */
 
     return NextResponse.json({ success: true, message: "Order processed successfully" });
   } catch (error) {

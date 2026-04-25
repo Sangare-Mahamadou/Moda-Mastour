@@ -75,13 +75,21 @@ export default function AdminDashboard() {
       setIsAuthenticated(true);
     }
     
-    setOrders([
-      { id: 101, customerName: "Awa Koné", phone: "0707123456", total: 45000, method: "Orange Money", status: "PENDING", date: "13/04/2026" },
-      { id: 102, customerName: "Kouadio Jean", phone: "0505987654", total: 35000, method: "Wave", status: "COMPLETED", date: "12/04/2026" }
-    ]);
-
+    fetchOrders();
     fetchProducts();
   }, []);
+
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch('/api/orders');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && !data.error) setOrders(data);
+      }
+    } catch {
+      console.error("Failed to fetch orders");
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -454,10 +462,19 @@ export default function AdminDashboard() {
               <tbody>
                 {orders.map((order: any) => (
                   <tr key={order.id}>
-                    <td style={{ fontWeight: 'bold' }}>{order.customerName}</td>
+                    <td style={{ fontWeight: 'bold' }}>
+                      {order.customerName}
+                      <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.2rem', fontWeight: 'normal' }}>
+                        {order.items?.map((item: any, i: number) => (
+                          <div key={i}>
+                            {item.quantity}x {item.product?.name} {item.size ? `(Taille: ${item.size})` : ''}
+                          </div>
+                        ))}
+                      </div>
+                    </td>
                     <td style={{ color: 'var(--color-gold)', fontWeight: 'bold' }}>{order.total.toLocaleString()} FCFA</td>
-                    <td>{order.phone}</td>
-                    <td>{order.method}</td>
+                    <td>{order.customerPhone}</td>
+                    <td>{order.paymentMethod}</td>
                     <td>
                       <span className={`status-badge status-${order.status.toLowerCase()}`}>
                         {order.status}

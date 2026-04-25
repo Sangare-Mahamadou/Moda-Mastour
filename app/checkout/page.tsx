@@ -11,10 +11,27 @@ export default function CheckoutPage() {
   const [formData, setFormData] = useState({ name: '', phone: '', method: 'Orange Money' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
+    // Save order to the database
+    try {
+      await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          phone: formData.phone,
+          method: formData.method,
+          total,
+          cart
+        })
+      });
+    } catch (err) {
+      console.error("Order could not be saved", err);
+    }
+
     // Construction du message WhatsApp détaillé
     let message = `Bonjour Moda Mastou ! 👋\nJe souhaite passer une commande.\n\n*Client(e) :* ${formData.name}\n*Contact Paiement :* ${formData.phone} (${formData.method})\n\n*Détails de la commande :*\n`;
     

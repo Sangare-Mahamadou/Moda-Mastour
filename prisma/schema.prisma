@@ -55,6 +55,7 @@ model OrderItem {
   productId Int
   quantity  Int
   price     Float
+  size      String?
   order     Order   @relation(fields: [orderId], references: [id])
   product   Product @relation(fields: [productId], references: [id])
 }
